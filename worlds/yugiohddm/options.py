@@ -6,12 +6,12 @@ from dataclasses import dataclass
 
 class Progression(Choice):
     """
-    Free Duel mode means all progression will be made through the Free Duel menu
+    Free Duel mode means progression will be made through the Free Duel menu
     culminating in a fight against Yami Yugi.
     Your game will be longer per duelist you set to play against.
-    Grandpa's Shop will never advance in this mode.
+    You do not enter tournaments in this mode.
 
-    Tournament mode means all progression will be made in Tournaments with the
+    Tournament mode means progression will be made in Tournaments with the
     goal being completing The Last Judgement in the Dark Tournament Division.
     24 - 72 duel wins required, depending on checks you receive.
     """
@@ -68,48 +68,34 @@ class RandomizeStartingDice(Toggle):
     """
     display_name = "Randomize Starting Dice"
 
-#class BonusItemMode(Choice):
-#    """
-#    Decide what you would like to receive from filler checks.
-#
-#    Random Dice will reward any random die from the game. You won't receive
-#    two of the same dice as rewards in this way, all rewards are unique.
-#    In Tournament Progression mode, Grandpa's Shop can still progress this way
-#    although it is quite slow. Approximately 3-6 Tournament wins per shop level.
-#
-#    Shop Progress will divide the number of filler checks between
-#    Shop Levels and Gold items. This will halt normal shop progression
-#    if you have chosen Tournament mode instead of Free Duel.
-#    """
-#    display_name = "Bonus Item Mode"
-#    option_random_dice = 0
-#    option_shop_progress = 1
-#    default = 0
-#
-#class GoldRewardMinimum(Range):
-#    """
-#    This option only matters when your Bonus Item Mode option is Shop Progress.
-#    
-#    The minimum amount of gold you will receive from Gold filler checks.
-#    """
-#    display_name = "Gold Reward Minimum"
-#    range_start = 0
-#    range_end = 65534
-#    default = 1000
-#
-#class GoldRewardMaximum(Range):
-#    """
-#    This option only matters when your Bonus Item Mode option is Shop Progress.
-#    
-#    The maximum amount of gold you will receive from Gold filler checks.
-#    The player can't hold more than 65,535 gold at a time. Any gold received
-#    that would overflow is capped at 65,535.
-#    The most expensive shop item costs 50,000 gold.
-#    """
-#    display_name = "Gold Reward Maximum"
-#    range_start = 1
-#    range_end = 65535
-#    default = 10000
+class BonusItemMode(Choice):
+    """
+    Decide what you would like to receive from filler checks.
+
+    Random Dice will reward any random die from the game.
+    In Tournament Progression mode, Grandpa's Shop can still progress
+    although it is quite slow. Approximately 3-6 Tournament wins per shop level.
+
+    Shop Progress makes collecting Dice locations. You may be required
+    to buy dice from Grandpa's Shop to progress. This mode will divide the 
+    number of filler checks between Shop Levels and Gold items.
+    This will halt normal shop progression if you have chosen Tournament mode.
+    """
+    display_name = "Bonus Item Mode"
+    option_random_dice = 0
+    option_shop_progress = 1
+    default = 0
+
+class GoldRewardAmount(Range):
+    """
+    This option only matters when your Bonus Item Mode option is Shop Progress.
+    
+    The amount of gold you will receive from Gold filler checks.
+    """
+    display_name = "Gold Reward Amount"
+    range_start = 50
+    range_end = 200
+    default = 100
 
 @dataclass
 class YGODDMOptions(PerGameCommonOptions):
@@ -118,9 +104,8 @@ class YGODDMOptions(PerGameCommonOptions):
     starting_duelists: StartingDuelists
     free_duel_goal: FreeDuelGoal
     randomize_starting_dice: RandomizeStartingDice
-    #bonus_item_mode: BonusItemMode
-    #gold_reward_minimum: GoldRewardMinimum
-    #gold_reward_maximum: GoldRewardMaximum
+    bonus_item_mode: BonusItemMode
+    gold_reward_amount: GoldRewardAmount
 
     
 

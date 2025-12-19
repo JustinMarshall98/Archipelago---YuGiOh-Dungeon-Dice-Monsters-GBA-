@@ -7,7 +7,7 @@ from .duelists import Duelist, get_duelist_defeat_location_name, ids_to_duelists
 from .tournament import Tournament, all_tournaments
 
 def get_location_name_for_dice(dice: Dice) -> str:
-    return f"{dice.name}"
+    return f"Collect {dice.name}"
 
 def get_location_id_for_dice_id(dice_id: int) -> int:
     return Constants.DICE_COLLECTION_OFFSET + dice_id
@@ -87,6 +87,14 @@ class TournamentLocation(YGODDMLocation):
     def __init__(self, region: Region, player: int, tournament: Tournament):
         super().__init__(region, player, get_location_name_for_tournament(tournament), get_location_id_for_tournament(tournament))
         self.tournament = tournament
+
+class DiceLocation(YGODDMLocation):
+    # Check for a die being in the players collection
+    dice: Dice
+
+    def __init__(self, region: Region, player: int, dice: Dice):
+        super().__init__(region, player, get_location_name_for_dice(dice), get_location_id_for_dice(dice))
+        self.dice = dice
 
 dice_location_name_to_id: typing.Dict[str, int] = {}
 for dice in all_dice:
