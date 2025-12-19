@@ -20,24 +20,17 @@ class Progression(Choice):
     option_tournaments = 1
     default = 1
 
-class DuelistRematches(Choice):
+class FreeDuelRewards(Choice):
     """
     This option only matters when your Progression mode is Free Duel.
 
-    No matter what choice is made here, Yami Yugi will be unlocked after defeating every duelist
-    at least once.
-
-    "No Rematches" means each duelist you unlock can be beaten only once to yield a check.
-
-    "One Rematch" means each duelist you unlock can be beaten twice to yield two different checks.
-
-    The more rematches you add, the more game time you can expect to have.
-    Extra check locations are randomized dice rewards that get added to your dice pool.
+    Choose whether you will be awarded one or two checks every time
+    a duelist is defeated in Free Duel.
     """
-    display_name = "Duelist Rematches"
-    option_no_rematches = 0
-    option_one_rematch = 1
-    default = 0
+    display_name = "Free Duel Rewards"
+    option_one = 0
+    option_two = 1
+    default = 1
 
 class StartingDuelists(Range):
     """
@@ -113,7 +106,7 @@ class RandomizeStartingDice(Toggle):
 @dataclass
 class YGODDMOptions(PerGameCommonOptions):
     progression: Progression
-    duelist_rematches: DuelistRematches
+    free_duel_rewards: FreeDuelRewards
     starting_duelists: StartingDuelists
     randomize_starting_dice: RandomizeStartingDice
     #bonus_item_mode: BonusItemMode

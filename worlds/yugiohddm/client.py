@@ -8,7 +8,7 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 from .utils import Constants
 from .items import is_dice_item, convert_item_id_to_dice_id, item_id_to_item_name
-from .locations import get_location_id_for_duelist, duelist_from_location_id, is_duelist_location_id, get_location_id_for_duelist_rematch, duelist_rematch_from_location_id, is_duelist_rematch_location_id, get_location_id_for_tournament
+from .locations import get_location_id_for_duelist, duelist_from_location_id, is_duelist_location_id, get_2nd_location_id_for_duelist, get_location_id_for_tournament
 from .duelists import Duelist, all_duelists, name_to_duelist
 from .dice import id_to_dice
 from .tournament import Tournament, all_tournaments
@@ -168,6 +168,14 @@ class YGODDMClient(BizHawkClient):
                     get_location_id_for_duelist(key) for key, value in duelists_to_wins.items() if value > 0
                 ])
 
+                if (ctx.slot_data[Constants.GAME_OPTIONS_KEY]['free_duel_rewards'] == 1):
+                    # Grab 2nd checks
+                    more_local_check_locations: typing.Set[int] = set([
+                        get_2nd_location_id_for_duelist(key) for key, value in duelists_to_wins.items() if value > 0
+                    ])
+
+                    new_local_check_locations = new_local_check_locations.union(more_local_check_locations)
+
                 # Unlock Duelists
 
                 unlocked_duelist_bitflags: typing.List[int] = await self.read_duelist_collection(ctx)
@@ -277,14 +285,6 @@ class YGODDMClient(BizHawkClient):
                         len(received_dice_ids).to_bytes(1, "little"),
                         COMBINED_WRAM
                     )])
-
-            if (ctx.slot_data[Constants.GAME_OPTIONS_KEY]['progression'] == 0 and ctx.slot_data[Constants.GAME_OPTIONS_KEY]['duelist_rematches'] == 1):
-                # Grab rematch checks
-                more_local_check_locations: typing.Set[int] = set([
-                    get_location_id_for_duelist_rematch(key) for key, value in duelists_to_wins.items() if value > 1
-                ])
-
-                new_local_check_locations = new_local_check_locations.union(more_local_check_locations)
                 
             # Local checked checks handling
             if new_local_check_locations != self.local_checked_locations:

@@ -10,9 +10,9 @@ from worlds.generic.Rules import set_rule
 from .client import YGODDMClient
 from .utils import Constants
 from .items import YGODDMItem, item_name_to_item_id, create_item as fabricate_item, create_victory_event, create_victory_event_tournament
-from .locations import YGODDMLocation, DuelistLocation, DuelistFirstRematchLocation, location_name_to_id as location_map, TournamentLocation
+from .locations import YGODDMLocation, DuelistLocation, Duelist2ndLocation, location_name_to_id as location_map, TournamentLocation
 from .dice import Dice, all_dice
-from .options import YGODDMOptions, DuelistRematches, Progression
+from .options import YGODDMOptions, FreeDuelRewards, Progression
 from .duelists import Duelist, all_duelists, map_duelists_to_ids, all_duelists_test
 from .tournament import Tournament, all_tournaments, name_to_tournament
 from .version import __version__
@@ -88,14 +88,14 @@ class YGODDMWorld(World):
                                                 d.duelist in self.get_available_duelists(state)))
                     free_duel_region.locations.append(duelist_location)
 
-            # If enabled, add Duelist rematch 1 locations
-            if (self.options.duelist_rematches.value == DuelistRematches.option_one_rematch):
+            # If enabled, add Duelist 2nd locations
+            if (self.options.free_duel_rewards.value == FreeDuelRewards.option_two):
                 for duelist in self.duelist_unlock_order:
                     if duelist is not Duelist.YAMI_YUGI:
-                        duelist_rematch_location: DuelistFirstRematchLocation = DuelistFirstRematchLocation(free_duel_region, self.player, duelist)
-                        set_rule(duelist_rematch_location, (lambda state, d=duelist_rematch_location:
+                        duelist_2nd_location: Duelist2ndLocation = Duelist2ndLocation(free_duel_region, self.player, duelist)
+                        set_rule(duelist_2nd_location, (lambda state, d=duelist_2nd_location:
                                                     d.duelist in self.get_available_duelists(state)))
-                        free_duel_region.locations.append(duelist_rematch_location)
+                        free_duel_region.locations.append(duelist_2nd_location)
 
             # if enabled, add money and shop progression locations
             #if (self.options.shop_progress_in_pool):
