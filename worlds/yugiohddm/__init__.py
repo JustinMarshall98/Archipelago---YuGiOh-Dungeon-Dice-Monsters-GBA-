@@ -120,14 +120,14 @@ class YGODDMWorld(World):
             itempool += [self.create_item(dice.name) for dice in reward_dice][:filler_slots]
 
             # Set Yami Yugi's item to game victory
-            # Set rule so it knows that Yami Yugi can't appear until you have all other duelist items
+            # Set rule so it knows that Yami Yugi can't appear until you have the right number of duelist items
             yami_yugi_location: DuelistLocation = DuelistLocation(free_duel_region, self.player, Duelist.YAMI_YUGI)
             duelist_names: typing.List[str] = []
             for d in self.duelist_unlock_order:
                 if d not in self.starting_unlocked_duelists and d is not Duelist.YAMI_YUGI:
                     duelist_names.append(d.name)
 
-            set_rule(yami_yugi_location, lambda state: state.has_all(duelist_names, self.player))
+            set_rule(yami_yugi_location, lambda state: state.has_from_list(duelist_names, self.player, max(self.options.free_duel_goal.value - self.options.starting_duelists, 0)))
             yami_yugi_location.place_locked_item(create_victory_event(self.player))
             free_duel_region.locations.append(yami_yugi_location)
             

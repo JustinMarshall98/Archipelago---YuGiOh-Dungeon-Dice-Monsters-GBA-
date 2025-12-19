@@ -37,15 +37,23 @@ class StartingDuelists(Range):
     This option only matters when your Progression mode is Free Duel.
      
     The number of Duelists to start with unlocked.
-    There are 92 duelists in total, Yami Yugi is reserved for the game's goal so the limit is 91.
-    Setting the number to 91 would automatically put you in go-mode.
-    Each extra duelist you start with unlocked also represents one more filler item for you
-    instead of their normal progression item.
     """
     display_name = "Starting Duelists"
     range_start = 1
     range_end = 91
     default = 10
+
+class FreeDuelGoal(Range):
+    """
+    This option only matters when your Progression mode is Free Duel.
+
+    The number of duelists defeated required to unlock your goal duel (against Yami Yugi).
+    A higher number leads to a longer game.
+    """
+    display_name = "Free Duel Goal"
+    range_start = 1
+    range_end = 91
+    default = 45
 
 class RandomizeStartingDice(Toggle):
     """
@@ -108,6 +116,7 @@ class YGODDMOptions(PerGameCommonOptions):
     progression: Progression
     free_duel_rewards: FreeDuelRewards
     starting_duelists: StartingDuelists
+    free_duel_goal: FreeDuelGoal
     randomize_starting_dice: RandomizeStartingDice
     #bonus_item_mode: BonusItemMode
     #gold_reward_minimum: GoldRewardMinimum

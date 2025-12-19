@@ -207,9 +207,10 @@ class YGODDMClient(BizHawkClient):
                             duelist_bitflag_index = duelist_bitflag_index + 1
                         unlocked_duelist_bitflags[duelist_bitflag_index] |= duelist_bitflag
                 
-                # Check for Yami Yugi unlock based on number of duelists unlocked
-                # If the 91 other duelists are all present, so is Yami Yugi
-                if duelist_count >= 91:
+                # Check for Yami Yugi unlock based on number of duelists defeated
+                # Number defined by yaml option (free_duel_goal)
+                wins_count = sum(value > 0 for value in duelists_to_wins.values())
+                if wins_count >= ctx.slot_data[Constants.GAME_OPTIONS_KEY]['free_duel_goal']:
                     unlocked_duelist_bitflags[0] |= Duelist.YAMI_YUGI.bitflag
 
                 await bizhawk.write(ctx.bizhawk_ctx, [(
