@@ -114,4 +114,4 @@ for tournament in all_tournaments:
 
 # Not unless we have dice locations as checks
 #location_name_to_id: typing.Dict[str, int] = {**dice_location_name_to_id, **duelist_location_name_to_id, **duelist_rematch_location_name_to_id}
-location_name_to_id: typing.Dict[str, int] = {**duelist_location_name_to_id, **duelist_2nd_location_name_to_id, **tournament_location_name_to_id}
+location_name_to_id: typing.Dict[str, int] = {**duelist_location_name_to_id, **duelist_2nd_location_name_to_id, **tournament_location_name_to_id, **dice_location_name_to_id}
