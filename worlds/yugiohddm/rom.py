@@ -3,7 +3,13 @@ import json
 import os
 import pkgutil
 
+import Utils
+
 from pathlib import Path
+
+from settings import get_settings
+
+from .utils import Constants
 
 import bsdiff4
 
@@ -11,8 +17,13 @@ from worlds.Files import APProcedurePatch, APTokenMixin, APPatchExtension
 
 from typing import BinaryIO
 
+def get_base_rom_as_bytes() -> bytes:
+    with open(get_settings().yugiohddm_options.rom_file, "rb") as infile:
+        base_rom_bytes = bytes(Utils.read_snes_rom(infile))
+    return base_rom_bytes
+
 class YuGiOhDDMPatchExtension(APPatchExtension):
-    game = "YuGiOh! Dungeon Dice Monsters"
+    game = Constants.GAME_NAME
 
     @staticmethod
     def patch_rom(caller, iso, placement_file):
@@ -26,7 +37,7 @@ class YuGiOhDDMPatchExtension(APPatchExtension):
         return rom_data
     
 class YuGiOhDDMProcedurePatch(APProcedurePatch, APTokenMixin):
-    game = "YuGiOh! Dungeon Dice Monsters"
+    game = Constants.GAME_NAME
     hash = "1AC4901F9A831D6B86CA776BB61F8D8B"
     patch_file_ending = ".apygoddm"
     result_file_ending = ".gba"
@@ -35,10 +46,13 @@ class YuGiOhDDMProcedurePatch(APProcedurePatch, APTokenMixin):
         ("patch_rom", ["patch_file.json"])
     ]
 
+    @classmethod
+    def get_source_data(cls) -> bytes:
+        return get_base_rom_as_bytes()
+
     def patch(self, target: str) -> None:
         file_name = target[:-4]
         if os.path.exists(file_name + ".gba"):
             os.unlink(file_name + ".gba")
         
         super().patch(target)
-        os.rename(target, file_name + "patched" + ".gba")

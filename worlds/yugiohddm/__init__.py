@@ -5,6 +5,7 @@ import warnings
 import Utils
 import json
 import os
+import settings
 
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import CollectionState, Region, Tutorial, LocationProgressType
@@ -20,6 +21,16 @@ from .options import YGODDMOptions, FreeDuelRewards, Progression, BonusItemMode
 from .duelists import Duelist, all_duelists, map_duelists_to_ids, all_duelists_test
 from .tournament import Tournament, all_tournaments, name_to_tournament
 from .version import __version__
+
+class YGODDMSettings(settings.Group):
+    class RomFile(settings.UserFilePath):
+        """File name of the YuGiOh Dungeon Dice Monsters rom"""
+        description = "Yu-Gi-Oh! Dungeon Dice Monsters rom File"
+        copy_to = "Yu-Gi-Oh! - Dungeon Dice Monsters.gba"
+        md5s = ["1AC4901F9A831D6B86CA776BB61F8D8B"]
+
+    rom_file: RomFile = RomFile(RomFile.copy_to)
+    rom_start: bool = False
 
 class YGODDMWeb(WebWorld):
     theme = "dirt"
@@ -43,6 +54,7 @@ class YGODDMWorld(World):
     options: YGODDMOptions
     required_client_version = (0, 5, 0)
     web = YGODDMWeb()
+    settings: typing.ClassVar[YGODDMSettings]
 
     duelist_unlock_order: typing.List[Duelist]
     starting_unlocked_duelists: typing.List[Duelist]
