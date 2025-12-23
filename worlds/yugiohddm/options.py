@@ -55,6 +55,19 @@ class FreeDuelGoal(Range):
     range_end = 91
     default = 45
 
+class DiceStats(Choice):
+    """
+    The double option changes all dice crest faces to have
+    double their normal value. This can reduce the amount of time
+    spent rolling for necessary crests in battle and can give
+    AI opponents a little more bite than normal.
+    Normal leaves crest faces as they are in vanilla gameplay.
+    """
+    display_name = "Dice Stats"
+    option_normal = 0
+    option_double = 1
+    default = 1
+
 class RandomizeStartingDice(Toggle):
     """
     In the base game your starting pool is lightly randomized to begin with,
@@ -103,6 +116,7 @@ class YGODDMOptions(PerGameCommonOptions):
     free_duel_rewards: FreeDuelRewards
     starting_duelists: StartingDuelists
     free_duel_goal: FreeDuelGoal
+    dice_stats: DiceStats
     randomize_starting_dice: RandomizeStartingDice
     bonus_item_mode: BonusItemMode
     gold_reward_amount: GoldRewardAmount

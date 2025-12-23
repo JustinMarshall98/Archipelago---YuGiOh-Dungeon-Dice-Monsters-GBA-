@@ -2,11 +2,15 @@
 
 import typing
 import warnings
+import Utils
+import json
+import os
 
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import CollectionState, Region, Tutorial, LocationProgressType
 from worlds.generic.Rules import set_rule
 
+from .rom import YuGiOhDDMProcedurePatch
 from .client import YGODDMClient
 from .utils import Constants
 from .items import YGODDMItem, item_name_to_item_id, create_item as fabricate_item, create_victory_event, create_victory_event_tournament
@@ -46,7 +50,27 @@ class YGODDMWorld(World):
 
     location_name_to_id = location_map
     item_name_to_id = item_name_to_item_id
-    
+
+    def generate_output(self, output_directory: str) -> None:
+        patch_dict: dict[str, typing.Any] = dict()
+        patch_dict["DiceStats"] = self.options.dice_stats.value
+
+        rom_name_text = f"YGODDM{Utils.__version__.replace(".","")[0:3]}_{self.player}_{self.multiworld.seed:9}"
+        rom_name_text = rom_name_text[:20]
+        rom_name = bytearray(rom_name_text, 'utf-8')
+        rom_name.extend([0] * (20 - len(rom_name)))
+        patch_dict["RomName"] = f'YGODDM{Utils.__version__.replace(".", "")[0:3]}_{self.player}_{self.multiworld.seed:9}'
+
+        patch_dict["OutputFile"] = f'{self.multiworld.get_out_file_name_base(self.player)}'
+
+        patch = YuGiOhDDMProcedurePatch(player=self.player, player_name=self.player_name)
+        patch.write_file("patch_file.json", json.dumps(patch_dict).encode("UTF-8"))
+        rom_path = os.path.join(
+            output_directory, f"{self.multiworld.get_out_file_name_base(self.player)}" f"{patch.patch_file_ending}"
+        )
+        patch.write(rom_path)
+
+
     def get_available_duelists(self, state: CollectionState) -> typing.List[Duelist]:
         available_duelists: typing.List[Duelist] = [duelist for duelist in self.starting_unlocked_duelists]
         for d in self.duelist_unlock_order:
@@ -203,20 +227,20 @@ class YGODDMWorld(World):
                 filler_slots = (len(free_duel_region.locations) + len(grandpas_shop_region.locations)) - len(itempool)
             else:
                 filler_slots = (len(division_1_region.locations) + len(division_2_region.locations) + len(division_3_region.locations) + len(grandpas_shop_region.locations)) - len(itempool)
-            itempool += [self.create_item(Constants.GOLD_FILLER_ITEM_NAME) for i in range(1, filler_slots)]
+            itempool += [self.create_item(Constants.GOLD_FILLER_ITEM_NAME) for i in range(1, filler_slots)] # Less one (range start at 1) because of locked victory item
         else: #BonusItemMode Random Dice
             # Add random Dice items from the pool to fill in empty locations
             filler_slots: int
             if (self.options.progression.value == Progression.option_free_duel):
-                filler_slots = (len(free_duel_region.locations) + len(grandpas_shop_region.locations)) - len(itempool)
+                filler_slots = len(free_duel_region.locations) - len(itempool)
             else:
-                filler_slots = (len(division_1_region.locations) + len(division_2_region.locations) + len(division_3_region.locations) + len(grandpas_shop_region.locations)) - len(itempool)
+                filler_slots = len(division_1_region.locations) + len(division_2_region.locations) + len(division_3_region.locations) - len(itempool)
             reward_dice: typing.List[Dice] = [dice for dice in all_dice]
             while len(reward_dice) < filler_slots:
                 reward_dice += reward_dice
             self.random.shuffle(reward_dice)
 
-            itempool += [self.create_item(dice.name) for dice in reward_dice][:filler_slots]
+            itempool += [self.create_item(dice.name) for dice in reward_dice][:filler_slots - 1] # Less one becuase of locked victory item
         
         self.multiworld.itempool.extend(itempool)
 
