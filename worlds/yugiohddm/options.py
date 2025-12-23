@@ -18,7 +18,20 @@ class Progression(Choice):
     display_name = "Goal"
     option_free_duel = 0
     option_tournaments = 1
-    default = 1
+    default = 0
+
+class TournamentRewards(Choice):
+    """
+    This option only matters when your Progression mode is Tournament.
+
+    Choose whether you will be awarded one, two or three checks every time
+    you complete a Tournament.
+    """
+    display_name = "Tournament Rewards"
+    option_one = 0
+    option_two = 1
+    option_three = 2
+    default = 2
 
 class FreeDuelRewards(Choice):
     """
@@ -113,6 +126,7 @@ class GoldRewardAmount(Range):
 @dataclass
 class YGODDMOptions(PerGameCommonOptions):
     progression: Progression
+    tournament_rewards: TournamentRewards
     free_duel_rewards: FreeDuelRewards
     starting_duelists: StartingDuelists
     free_duel_goal: FreeDuelGoal

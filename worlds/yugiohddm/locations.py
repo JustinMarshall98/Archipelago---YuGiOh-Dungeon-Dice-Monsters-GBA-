@@ -42,12 +42,24 @@ def is_duelist_2nd_location_id(location_id: int) -> bool:
     return ((location_id //2) - Constants.DUELIST_UNLOCK_OFFSET) in ids_to_duelists
 
 def get_location_name_for_tournament(tournament: Tournament) -> str:
-    return f"{tournament}"
+    return f"{tournament} 1"
 
 def get_location_id_for_tournament(tournament: Tournament) -> int:
     return Constants.DIVISION_1_COMPLETION_OFFSET_ID + tournament.id
     # As long as the locations ID's are unique it doesn't matter
     # If they match their proper division here
+
+def get_2nd_location_name_for_tournament(tournament: Tournament) -> str:
+    return f"{tournament} 2"
+
+def get_2nd_location_id_for_tournament(tournament: Tournament) -> int:
+    return (Constants.DIVISION_1_COMPLETION_OFFSET_ID * 2) + tournament.id
+
+def get_3rd_location_name_for_tournament(tournament: Tournament) -> str:
+    return f"{tournament} 3"
+
+def get_3rd_location_id_for_tournament(tournament: Tournament) -> int:
+    return (Constants.DIVISION_1_COMPLETION_OFFSET_ID * 3) + tournament.id
 
 class YGODDMLocation(Location):
     game: str
@@ -65,7 +77,7 @@ class YGODDMLocation(Location):
         item.location = self
 
 class DuelistLocation(YGODDMLocation):
-    # Check for a duelist being defeated for the first time
+    # Check for a duelist being defeated
     duelist: Duelist
 
     def __init__(self, region: Region, player: int, duelist: Duelist):
@@ -73,7 +85,7 @@ class DuelistLocation(YGODDMLocation):
         self.duelist = duelist
 
 class Duelist2ndLocation(YGODDMLocation):
-    # Check for a duelist being defeated for the second time
+    # Check for a duelist being defeated
     duelist: Duelist
 
     def __init__(self, region: Region, player: int, duelist: Duelist):
@@ -81,11 +93,27 @@ class Duelist2ndLocation(YGODDMLocation):
         self.duelist = duelist
 
 class TournamentLocation(YGODDMLocation):
-    # Check for a tournament being completed for the first time
+    # Check for a tournament being completed
     tournament: Tournament
 
     def __init__(self, region: Region, player: int, tournament: Tournament):
         super().__init__(region, player, get_location_name_for_tournament(tournament), get_location_id_for_tournament(tournament))
+        self.tournament = tournament
+
+class Tournament2ndLocation(YGODDMLocation):
+    # Check for a tournament being completed
+    tournament: Tournament
+
+    def __init__(self, region: Region, player: int, tournament: Tournament):
+        super().__init__(region, player, get_2nd_location_name_for_tournament(tournament), get_2nd_location_id_for_tournament(tournament))
+        self.tournament = tournament
+
+class Tournament3rdLocation(YGODDMLocation):
+    # Check for a tournament being completed
+    tournament: Tournament
+
+    def __init__(self, region: Region, player: int, tournament: Tournament):
+        super().__init__(region, player, get_3rd_location_name_for_tournament(tournament), get_3rd_location_id_for_tournament(tournament))
         self.tournament = tournament
 
 class DiceLocation(YGODDMLocation):
@@ -112,6 +140,14 @@ tournament_location_name_to_id: typing.Dict[str, int] = {}
 for tournament in all_tournaments:
     tournament_location_name_to_id[get_location_name_for_tournament(tournament)] = get_location_id_for_tournament(tournament)
 
+tournament_2nd_location_name_to_id: typing.Dict[str, int] = {}
+for tournament in all_tournaments:
+    tournament_location_name_to_id[get_2nd_location_name_for_tournament(tournament)] = get_2nd_location_id_for_tournament(tournament)
+
+tournament_3rd_location_name_to_id: typing.Dict[str, int] = {}
+for tournament in all_tournaments:
+    tournament_location_name_to_id[get_3rd_location_name_for_tournament(tournament)] = get_3rd_location_id_for_tournament(tournament)
+
 # Not unless we have dice locations as checks
 #location_name_to_id: typing.Dict[str, int] = {**dice_location_name_to_id, **duelist_location_name_to_id, **duelist_rematch_location_name_to_id}
-location_name_to_id: typing.Dict[str, int] = {**duelist_location_name_to_id, **duelist_2nd_location_name_to_id, **tournament_location_name_to_id, **dice_location_name_to_id}
+location_name_to_id: typing.Dict[str, int] = {**duelist_location_name_to_id, **duelist_2nd_location_name_to_id, **tournament_location_name_to_id, **tournament_2nd_location_name_to_id, **tournament_3rd_location_name_to_id, **dice_location_name_to_id}

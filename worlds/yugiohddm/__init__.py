@@ -15,7 +15,7 @@ from .rom import YuGiOhDDMProcedurePatch
 from .client import YGODDMClient
 from .utils import Constants
 from .items import YGODDMItem, item_name_to_item_id, create_item as fabricate_item, create_victory_event, create_victory_event_tournament
-from .locations import YGODDMLocation, DuelistLocation, Duelist2ndLocation, location_name_to_id as location_map, TournamentLocation, DiceLocation
+from .locations import YGODDMLocation, DuelistLocation, Duelist2ndLocation, location_name_to_id as location_map, TournamentLocation, Tournament2ndLocation, Tournament3rdLocation, DiceLocation
 from .dice import Dice, all_dice
 from .options import YGODDMOptions, FreeDuelRewards, Progression, BonusItemMode
 from .duelists import Duelist, all_duelists, map_duelists_to_ids, all_duelists_test
@@ -186,6 +186,38 @@ class YGODDMWorld(World):
                         tournament_location: TournamentLocation = TournamentLocation(division_3_region, self.player, tournament)
                         set_rule(tournament_location, lambda state: state.has(Constants.DIVISION_3_ITEM_NAME, self.player) and state.has(Constants.DIVISION_2_ITEM_NAME, self.player))
                         division_3_region.locations.append(tournament_location)
+
+            # If enabled, add Tournament 2nd locations
+            if (self.options.tournament_rewards.value >= 1):
+                for tournament in all_tournaments:
+                    if tournament.name != Constants.VICTORY_ITEM_TOURNAMENT_NAME:
+                        if tournament.offset == Constants.DIVISION_1_COMPLETION_OFFSET:
+                            tournament_2nd_location: Tournament2ndLocation = Tournament2ndLocation(division_1_region, self.player, tournament)
+                            division_1_region.locations.append(tournament_2nd_location)
+                        elif tournament.offset == Constants.DIVISION_2_COMPLETION_OFFSET:
+                            tournament_2nd_location: Tournament2ndLocation = Tournament2ndLocation(division_2_region, self.player, tournament)
+                            set_rule(tournament_2nd_location, lambda state: state.has(Constants.DIVISION_2_ITEM_NAME, self.player))
+                            division_2_region.locations.append(tournament_2nd_location)
+                        else:
+                            tournament_2nd_location: Tournament2ndLocation = Tournament2ndLocation(division_3_region, self.player, tournament)
+                            set_rule(tournament_2nd_location, lambda state: state.has(Constants.DIVISION_3_ITEM_NAME, self.player) and state.has(Constants.DIVISION_2_ITEM_NAME, self.player))
+                            division_3_region.locations.append(tournament_2nd_location)
+            
+            # If enabled, add Tournament 3rd locations
+            if (self.options.tournament_rewards.value >= 2):
+                for tournament in all_tournaments:
+                    if tournament.name != Constants.VICTORY_ITEM_TOURNAMENT_NAME:
+                        if tournament.offset == Constants.DIVISION_1_COMPLETION_OFFSET:
+                            tournament_3rd_location: Tournament3rdLocation = Tournament3rdLocation(division_1_region, self.player, tournament)
+                            division_1_region.locations.append(tournament_3rd_location)
+                        elif tournament.offset == Constants.DIVISION_2_COMPLETION_OFFSET:
+                            tournament_3rd_location: Tournament3rdLocation = Tournament3rdLocation(division_2_region, self.player, tournament)
+                            set_rule(tournament_3rd_location, lambda state: state.has(Constants.DIVISION_2_ITEM_NAME, self.player))
+                            division_2_region.locations.append(tournament_3rd_location)
+                        else:
+                            tournament_3rd_location: Tournament3rdLocation = Tournament3rdLocation(division_3_region, self.player, tournament)
+                            set_rule(tournament_3rd_location, lambda state: state.has(Constants.DIVISION_3_ITEM_NAME, self.player) and state.has(Constants.DIVISION_2_ITEM_NAME, self.player))
+                            division_3_region.locations.append(tournament_3rd_location)
             
             self.multiworld.completion_condition[self.player] = lambda state: state.has(
                 Constants.VICTORY_ITEM_TOURNAMENT_NAME, self.player

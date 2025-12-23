@@ -8,7 +8,7 @@ import worlds._bizhawk as bizhawk
 from worlds._bizhawk.client import BizHawkClient
 from .utils import Constants
 from .items import is_dice_item, convert_item_id_to_dice_id, item_id_to_item_name
-from .locations import get_location_id_for_duelist, duelist_from_location_id, is_duelist_location_id, get_2nd_location_id_for_duelist, get_location_id_for_tournament, get_location_id_for_dice_id
+from .locations import get_location_id_for_duelist, duelist_from_location_id, is_duelist_location_id, get_2nd_location_id_for_duelist, get_location_id_for_tournament, get_2nd_location_id_for_tournament, get_3rd_location_id_for_tournament, get_location_id_for_dice_id
 from .duelists import Duelist, all_duelists, name_to_duelist
 from .dice import id_to_dice
 from .tournament import Tournament, all_tournaments
@@ -299,6 +299,22 @@ class YGODDMClient(BizHawkClient):
                     get_location_id_for_tournament(key) for key, value in tournaments_to_wins.items() if value
                 ])
 
+                if (ctx.slot_data[Constants.GAME_OPTIONS_KEY]['tournament_rewards'] >= 1):
+                    # Grab 2nd checks
+                    more_local_check_locations: typing.Set[int] = set([
+                        get_2nd_location_id_for_tournament(key) for key, value in tournaments_to_wins.items() if value
+                    ])
+
+                    new_local_check_locations = new_local_check_locations.union(more_local_check_locations)
+
+                if (ctx.slot_data[Constants.GAME_OPTIONS_KEY]['tournament_rewards'] >= 2):
+                    # Grab 3rd checks
+                    more_local_check_locations: typing.Set[int] = set([
+                        get_3rd_location_id_for_tournament(key) for key, value in tournaments_to_wins.items() if value
+                    ])
+
+                    new_local_check_locations = new_local_check_locations.union(more_local_check_locations)
+
                 # Unlock/Lock Tournament Divisions
 
                 division_2_lock: typing.List[int] = [int.from_bytes(tournament_wins_bytes[0], "little") & 0xFE]
@@ -336,7 +352,7 @@ class YGODDMClient(BizHawkClient):
                     (await bizhawk.read(ctx.bizhawk_ctx, [(Constants.RECEIVED_SHOP_PROGRESS_COUNT_OFFSET, 1, COMBINED_WRAM)]))[0]
                 )
 
-                received_shop_prog_count: typing.int = sum(1 for item in received_items if item == Constants.SHOP_PROGRESSION_ITEM_ID)
+                received_shop_prog_count: int = sum(1 for item in received_items if item == Constants.SHOP_PROGRESSION_ITEM_ID)
                 
                 if (received_shop_prog_count > last_shop_prog_received_count):
                     await bizhawk.write(ctx.bizhawk_ctx, [(
@@ -354,7 +370,7 @@ class YGODDMClient(BizHawkClient):
                     (await bizhawk.read(ctx.bizhawk_ctx, [(Constants.RECEIVED_GOLD_COUNT_OFFSET, 1, COMBINED_WRAM)]))[0]
                 )
 
-                received_gold_count: typing.int = sum(1 for item in received_items if item == Constants.GOLD_FILLER_ITEM_ID)
+                received_gold_count: int = sum(1 for item in received_items if item == Constants.GOLD_FILLER_ITEM_ID)
                 
                 if (received_gold_count > last_gold_received_count):
                     # Write in new amount of gold bonuses given if the gold is given successfully
