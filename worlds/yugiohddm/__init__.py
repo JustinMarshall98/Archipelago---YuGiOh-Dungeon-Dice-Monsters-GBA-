@@ -16,7 +16,7 @@ from .client import YGODDMClient
 from .utils import Constants
 from .items import YGODDMItem, item_name_to_item_id, create_item as fabricate_item, create_victory_event, create_victory_event_tournament
 from .locations import YGODDMLocation, DuelistLocation, Duelist2ndLocation, location_name_to_id as location_map, TournamentLocation, Tournament2ndLocation, Tournament3rdLocation, DiceLocation
-from .dice import Dice, all_dice, id_to_dice
+from .dice import Dice, all_dice, id_to_dice, name_to_dice
 from .options import YGODDMOptions, FreeDuelRewards, Progression, BonusItemMode, RandomizeStartingDice
 from .duelists import Duelist, all_duelists, map_duelists_to_ids, all_duelists_test
 from .tournament import Tournament, all_tournaments, name_to_tournament
@@ -33,7 +33,7 @@ class YGODDMSettings(settings.Group):
     rom_start: bool = False
 
 class YGODDMWeb(WebWorld):
-    theme = "dirt"
+    theme = "partyTime"
 
     setup_en = Tutorial(
         "Multiworld Setup Guide",
@@ -115,17 +115,27 @@ class YGODDMWorld(World):
         if (self.options.progression.value == Progression.option_free_duel):
             for d in self.starting_unlocked_duelists:
                 self.options.start_inventory.value[d.name] = 1
+
         # Given the option, get a random set of starting dice
         if (self.options.randomize_starting_dice.value):
-            rando_dice_ids: typing.Set[int] = set()
+            # First, start off with any Set Starting Dice
+            # We ignore names that don't map to dice and entries past the 15th
+            rando_dice_ids: typing.List[int] = []
+            for dice_name in self.options.set_starting_dice:
+                if len(rando_dice_ids) >= 15:
+                    break
+                if dice_name in name_to_dice:
+                    rando_dice_ids.append(name_to_dice[dice_name].id)
+            # Randomize the rest
             while (len(rando_dice_ids) < 15):
                 new_dice_id = self.random.randint(0, 200)
                 while ((new_dice_id in rando_dice_ids) or (new_dice_id not in id_to_dice)):
                     new_dice_id = (new_dice_id + 1) % 201
-                rando_dice_ids.add(new_dice_id)
-                self.starting_randomized_dice.append(id_to_dice[new_dice_id])
+                rando_dice_ids.append(new_dice_id)
+            for dice_id in rando_dice_ids:
+                self.starting_randomized_dice.append(id_to_dice[dice_id])
                 # Put the Randomized dice into the start inventory
-                self.options.start_inventory.value[id_to_dice[new_dice_id].name] = 1
+                self.options.start_inventory.value[id_to_dice[dice_id].name] += 1
 
 
     def create_item(self, name: str) -> YGODDMItem:

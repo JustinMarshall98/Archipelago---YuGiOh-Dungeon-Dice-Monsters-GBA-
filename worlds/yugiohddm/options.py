@@ -1,7 +1,7 @@
 import typing
 import dataclasses
 
-from Options import Range, Choice, PerGameCommonOptions, Toggle
+from Options import Range, Choice, PerGameCommonOptions, Toggle, OptionList
 from dataclasses import dataclass
 
 class Progression(Choice):
@@ -94,6 +94,24 @@ class RandomizeStartingDice(Toggle):
     """
     display_name = "Randomize Starting Dice"
 
+class SetStartingDice(OptionList):
+    """
+    If RandomizeStartingDice is ON, you can set some or all of the dice
+    you'd like to start with here.
+
+    Leave this empty if you'd like all random starting dice.
+    You can specify up to 15 Dice, any entries
+    after the 15th will be ignored.
+    You can include multiples of the same dice.
+    Dice names are case sensitive, invalid names should
+    raise an exception on game Generation.
+
+    Example Syntax for a Harpie Lady Sisters and two Lord of D.'s
+    ["Harpie Lady Sisters", "Lord of D.", "Lord of D."]
+    """
+    display_name = "Set Starting Dice"
+    verify_item_name = True
+
 class BonusItemMode(Choice):
     """
     Decide what you would like to receive from filler checks.
@@ -132,6 +150,7 @@ class YGODDMOptions(PerGameCommonOptions):
     free_duel_goal: FreeDuelGoal
     dice_stats: DiceStats
     randomize_starting_dice: RandomizeStartingDice
+    set_starting_dice: SetStartingDice
     bonus_item_mode: BonusItemMode
     gold_reward_amount: GoldRewardAmount
       
