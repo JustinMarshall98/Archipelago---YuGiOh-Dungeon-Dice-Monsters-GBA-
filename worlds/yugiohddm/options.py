@@ -1,7 +1,7 @@
 import typing
 import dataclasses
 
-from Options import Range, Choice, PerGameCommonOptions, Toggle, OptionList, OptionSet
+from Options import Range, Choice, PerGameCommonOptions, Toggle, OptionList, OptionSet, StartInventoryPool
 from dataclasses import dataclass
 
 class Progression(Choice):
@@ -287,6 +287,7 @@ class YGODDMOptions(PerGameCommonOptions):
     bonus_item_mode: BonusItemMode
     gold_reward_amount: GoldRewardAmount
     set_free_duel_opponents: SetFreeDuelOpponents
+    start_inventory_from_pool: StartInventoryPool
       
     def serialize(self) -> typing.Dict[str, int]:
         return_dict: typing.Dict[str, int] = {}

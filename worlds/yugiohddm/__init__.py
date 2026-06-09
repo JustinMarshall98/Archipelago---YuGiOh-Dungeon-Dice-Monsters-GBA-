@@ -136,28 +136,8 @@ class YGODDMWorld(World):
         # Add all starting unlocked duelists to starting item pool, if you're on free duel progression
         if (self.options.progression.value == Progression.option_free_duel):
             for d in self.starting_unlocked_duelists:
-                self.options.start_inventory.value[d._name] = 1
-
-        # Given the option, get a random set of starting dice
-        if (self.options.randomize_starting_dice.value):
-            # First, start off with any Set Starting Dice
-            # We ignore names that don't map to dice and entries past the 15th
-            rando_dice_ids: typing.List[int] = []
-            for dice_name in self.options.set_starting_dice:
-                if len(rando_dice_ids) >= 15:
-                    break
-                if dice_name in name_to_dice:
-                    rando_dice_ids.append(name_to_dice[dice_name].id)
-            # Randomize the rest
-            while (len(rando_dice_ids) < 15):
-                new_dice_id = self.random.randint(0, 200)
-                while ((new_dice_id in rando_dice_ids) or (new_dice_id not in id_to_dice)):
-                    new_dice_id = (new_dice_id + 1) % 201
-                rando_dice_ids.append(new_dice_id)
-            for dice_id in rando_dice_ids:
-                self.starting_randomized_dice.append(id_to_dice[dice_id])
-                # Put the Randomized dice into the start inventory
-                self.options.start_inventory.value[id_to_dice[dice_id].name] += 1
+                self.options.start_inventory_from_pool.value[d._name] = 1
+                #self.push_precollected(self.create_item(d._name))
 
 
     def create_item(self, name: str) -> YGODDMItem:
@@ -299,12 +279,34 @@ class YGODDMWorld(World):
         self.multiworld.regions.append(menu_region)
 
     def create_items(self) -> None:
+        # Given the option, create a random set of starting dice here
+        if (self.options.randomize_starting_dice.value):
+            # First, start off with any Set Starting Dice
+            # We ignore names that don't map to dice and entries past the 15th
+            rando_dice_ids: typing.List[int] = []
+            for dice_name in self.options.set_starting_dice:
+                if len(rando_dice_ids) >= 15:
+                    break
+                if dice_name in name_to_dice:
+                    rando_dice_ids.append(name_to_dice[dice_name].id)
+            # Randomize the rest
+            while (len(rando_dice_ids) < 15):
+                new_dice_id = self.random.randint(0, 200)
+                while ((new_dice_id in rando_dice_ids) or (new_dice_id not in id_to_dice)):
+                    new_dice_id = (new_dice_id + 1) % 201
+                rando_dice_ids.append(new_dice_id)
+            for dice_id in rando_dice_ids:
+                self.starting_randomized_dice.append(id_to_dice[dice_id])
+                # Put the Randomized dice into the start inventory
+                self.options.start_inventory.value[id_to_dice[dice_id].name] += 1
+                self.push_precollected(self.create_item(id_to_dice[dice_id].name))
+
         itempool: typing.List[YGODDMItem] = []
 
         if (self.options.progression.value == Progression.option_free_duel):
             # Add Duelist unlock items
             for duelist in self.duelist_unlock_order:
-                if duelist not in self.starting_unlocked_duelists and duelist is not Duelist.YAMI_YUGI:
+                if duelist is not Duelist.YAMI_YUGI:
                     itempool.append(self.create_item(duelist._name))
         else:
             # Add Division 2 and 3 unlock items to pool
@@ -333,6 +335,12 @@ class YGODDMWorld(World):
             itempool += [self.create_item(dice.name) for dice in reward_dice][:filler_item_count]
 
         self.multiworld.itempool.extend(itempool)
+
+    def get_filler_item_name(self) -> str:
+        if (self.options.bonus_item_mode.value == BonusItemMode.option_shop_progress):
+            return Constants.GOLD_FILLER_ITEM_NAME
+        else:
+            return self.random.choice(all_dice).name
         
 
 
