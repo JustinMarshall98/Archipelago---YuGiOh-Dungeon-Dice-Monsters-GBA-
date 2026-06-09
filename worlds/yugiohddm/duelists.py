@@ -140,4 +140,4 @@ def map_ids_to_duelists(
     """Takes tuples of ids from the slot data and converts them back to Duelist objects."""
     return tuple(tuple(ids_to_duelists[id] for id in t) for t in ids)
 
-name_to_duelist = {duelist.name: duelist for duelist in all_duelists}
+name_to_duelist = {duelist._name: duelist for duelist in all_duelists}

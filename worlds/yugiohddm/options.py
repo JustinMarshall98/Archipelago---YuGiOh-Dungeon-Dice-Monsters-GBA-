@@ -1,7 +1,7 @@
 import typing
 import dataclasses
 
-from Options import Range, Choice, PerGameCommonOptions, Toggle, OptionList
+from Options import Range, Choice, PerGameCommonOptions, Toggle, OptionList, OptionSet
 from dataclasses import dataclass
 
 class Progression(Choice):
@@ -68,6 +68,23 @@ class FreeDuelGoal(Range):
     range_end = 91
     default = 45
 
+class FreeDuelPool(Range):
+    """
+    This option only matters when your Progression mode is Free Duel.
+
+    Set the number of duelists that locations will be created for
+    in Free Duel progression mode.
+    Lowering your location count allows you to send out fewer items
+    if you set and achieve an early goal.
+
+    If this number is set below FreeDuelGoal,
+    it will be raised to match it.
+    """
+    display_name = "Free Duel Pool"
+    range_start = 1
+    range_end = 91
+    default = 45
+
 class DiceStats(Choice):
     """
     The double option changes all dice crest faces to have
@@ -96,12 +113,13 @@ class RandomizeStartingDice(Toggle):
 
 class SetStartingDice(OptionList):
     """
-    If RandomizeStartingDice is ON, you can set some or all of the dice
+    If RandomizeStartingDice is True, you can set some or all of the dice
     you'd like to start with here.
 
     Leave this empty if you'd like all random starting dice.
     You can specify up to 15 Dice, any entries
-    after the 15th will be ignored.
+    after the 15th will be ignored, if you don't provide
+    enough the rest will be random.
     You can include multiples of the same dice.
     Dice names are case sensitive, invalid names should
     raise an exception on game Generation.
@@ -141,6 +159,120 @@ class GoldRewardAmount(Range):
     range_end = 200
     default = 100
 
+class SetFreeDuelOpponents(OptionSet):
+    """
+    This option only matters when your Progression mode is Free Duel.
+
+    You can write in names of Duelists you'd like to gaurantee
+    appearing in your free duel pool.
+    
+    Leave this empty if you'd like all opponents to be random.
+    You can specify as many duelists up to the size of your pool,
+    any additional entries will be ignored, if you don't provide
+    enough the rest will be random.
+    Duelist names are case sensitive, invalid names should
+    raise an exception on game Generation.
+
+    Yami Yugi and Yugi Moto always appear, they are invalid
+    entries for this option.
+
+    Example Syntax for Mai Valentine and Joey Wheeler
+    ["Mai Valentine", "Joey Wheeler"]
+    """
+    display_name = "Set Free Duel Opponents"
+    valid_keys = [
+    "Grandpa"
+    "Demitrius the Bully",
+    "Tea Gardner",
+    "Tristan Taylor",
+    "Joey Wheeler",
+    "Miss Madusa",
+    "Kreiger",
+    "Fortuno",
+    "Jackpot",
+    "Fender Shrill",
+    "Lint Greendale",
+    "Director Lucius",
+    "AD Archie",
+    "Kane Minion B",
+    "Kane Minion A",
+    "Diesel Kane",
+    "Seto Kaiba",
+    "Venom C",
+    "Venom B",
+    "Venom A",
+    "Scorpion Shoes Owner",
+    "Beluga",
+    "Professor Jeremy Harrison",
+    "Shadi",
+    "Curator Adriel Wainwright",
+    "Kane Minion F",
+    "Kane Minion E",
+    "Kane Minion D",
+    "Kane Minion C",
+    "Cedric",
+    "Feng Long",
+    "Mokuba Kaiba",
+    "Egger Baldwin",
+    "Thug C",
+    "Thug B",
+    "Thug A",
+    "The Greendale Zompire",
+    "Stringer",
+    "Game Show Producer",
+    "Anton Periwig",
+    "Chopman",
+    "Kaibas' Butler",
+    "Snipes Crosshair",
+    "Bickford Gage",
+    "Charlie Gale",
+    "Rex Raptor",
+    "Weevil Underwood",
+    "Yami Bakura",
+    "Mr. Titus",
+    "Bakura",
+    "Nibbles",
+    "Damien Draco",
+    "Tick-Tock",
+    "Para",
+    "Panik",
+    "The Puppeteer",
+    "Mako Tsunami",
+    "Mai Valentine",
+    "Melody",
+    "Serenity Wheeler",
+    "Maximillion Pegasus",
+    "Espa Roba",
+    "Bonz",
+    "Sindin the Clown",
+    "Duke Devlin",
+    "Bandit Keith",
+    "Kemo",
+    "Croquet",
+    "Dox",
+    "The Merchant",
+    "Strings",
+    "Arkana",
+    "Marik Ishtar",
+    "Yugi's Mother",
+    "Johnny Steps",
+    "Seeker",
+    "Ishizu Ishtar",
+    "Roger",
+    "Lloyd",
+    "Norman",
+    "Odion",
+    "Umbra",
+    "Lumis",
+    "Paradox",
+    "Doris",
+    "Jill",
+    "Ryan",
+    "Paul",
+    "Diana",
+    "Andrea"
+    ]
+
 @dataclass
 class YGODDMOptions(PerGameCommonOptions):
     progression: Progression
@@ -148,11 +280,18 @@ class YGODDMOptions(PerGameCommonOptions):
     free_duel_rewards: FreeDuelRewards
     starting_duelists: StartingDuelists
     free_duel_goal: FreeDuelGoal
+    free_duel_pool: FreeDuelPool
     dice_stats: DiceStats
     randomize_starting_dice: RandomizeStartingDice
     set_starting_dice: SetStartingDice
     bonus_item_mode: BonusItemMode
     gold_reward_amount: GoldRewardAmount
+    set_free_duel_opponents: SetFreeDuelOpponents
       
     def serialize(self) -> typing.Dict[str, int]:
-        return {field.name: getattr(self, field.name).value for field in dataclasses.fields(self)}
+        return_dict: typing.Dict[str, int] = {}
+        for field in dataclasses.fields(self):
+            if field.name != "plando_items":
+                return_dict[field.name] = getattr(self, field.name).value
+        return return_dict
+        #return {field.name: getattr(self, field.name).value for field in dataclasses.fields(self)}

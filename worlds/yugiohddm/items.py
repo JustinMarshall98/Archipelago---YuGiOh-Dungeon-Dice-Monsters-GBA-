@@ -9,7 +9,7 @@ from .tournament import name_to_tournament
 item_id_to_item_name: typing.Dict[int, str] = {}
 # Duelist unlock items as their Duelist ID's + Duelist unlock offset
 for duelist in all_duelists:
-    item_id_to_item_name[Constants.DUELIST_UNLOCK_OFFSET + duelist.id] = duelist.name
+    item_id_to_item_name[Constants.DUELIST_UNLOCK_OFFSET + duelist.id] = duelist._name
 # Dice items as their Dice ID + Dice offset
 for dice in all_dice:
     item_id_to_item_name[Constants.DICE_COLLECTION_OFFSET + dice.id] = dice.name

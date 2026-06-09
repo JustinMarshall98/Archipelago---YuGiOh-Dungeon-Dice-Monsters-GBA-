@@ -18,7 +18,7 @@ from .items import YGODDMItem, item_name_to_item_id, create_item as fabricate_it
 from .locations import YGODDMLocation, DuelistLocation, Duelist2ndLocation, location_name_to_id as location_map, TournamentLocation, Tournament2ndLocation, Tournament3rdLocation, DiceLocation
 from .dice import Dice, all_dice, id_to_dice, name_to_dice
 from .options import YGODDMOptions, FreeDuelRewards, Progression, BonusItemMode, RandomizeStartingDice
-from .duelists import Duelist, all_duelists, map_duelists_to_ids, all_duelists_test
+from .duelists import Duelist, map_duelists_to_ids, ids_to_duelists, name_to_duelist
 from .tournament import Tournament, all_tournaments, name_to_tournament
 from .version import __version__
 
@@ -87,7 +87,7 @@ class YGODDMWorld(World):
         available_duelists: typing.List[Duelist] = [duelist for duelist in self.starting_unlocked_duelists]
         for d in self.duelist_unlock_order:
             if d not in self.starting_unlocked_duelists:
-                if state.has(d.name, self.player):
+                if state.has(d._name, self.player):
                     available_duelists.append(d)
         return available_duelists
     
@@ -99,14 +99,36 @@ class YGODDMWorld(World):
                     #Hardcoded to be 6 groups of 3 for shop progression
                     available_dice.append(d)
         return available_dice
+    
+    def create_free_duel_pool(self) -> typing.List[Duelist]:
+        # If free duel pool < duelists needed to goal, make the pool num equal to goal num
+        if (self.options.free_duel_pool.value < self.options.free_duel_goal.value):
+            self.options.free_duel_pool.value = self.options.free_duel_goal.value
+        duelist_pool: typing.List[Duelist] = []
+        duelist_pool.append(Duelist.YAMI_YUGI)
+        duelist_pool.append(Duelist.YUGI_MOTO)
+        # First, start off with any Set Free Duel Opponents
+        # We ignore names that don't map to duelists (though there shouldn't be any) and entries past the pool count
+        for duelist_name in self.options.set_free_duel_opponents:
+            if len(duelist_pool) >= self.options.free_duel_pool.value + 1:
+                break
+            if duelist_name in name_to_duelist:
+                duelist_pool.append(name_to_duelist[duelist_name])
+        # Randomize the rest
+        while (len(duelist_pool) < self.options.free_duel_pool.value + 1):
+            new_duelist_id = self.random.randint(3, 93)
+            while ((new_duelist_id not in ids_to_duelists) or (ids_to_duelists[new_duelist_id] in duelist_pool)):
+                new_duelist_id = (new_duelist_id + 1) % 94
+            duelist_pool.append(ids_to_duelists[new_duelist_id])
+        return duelist_pool
 
     def generate_early(self) -> None:
-        self.duelist_unlock_order = all_duelists
+        self.duelist_unlock_order = self.create_free_duel_pool()
         self.tournament_locations = all_tournaments
         self.starting_unlocked_duelists = [Duelist.YUGI_MOTO]
         self.starting_randomized_dice = []
         # Figure out which other duelists will start unlocked
-        start_duelists: typing.List[Duelist] = [duelist for duelist in all_duelists]
+        start_duelists: typing.List[Duelist] = [duelist for duelist in self.duelist_unlock_order]
         start_duelists.remove(Duelist.YUGI_MOTO)
         start_duelists.remove(Duelist.YAMI_YUGI)
         self.random.shuffle(start_duelists)
@@ -114,7 +136,7 @@ class YGODDMWorld(World):
         # Add all starting unlocked duelists to starting item pool, if you're on free duel progression
         if (self.options.progression.value == Progression.option_free_duel):
             for d in self.starting_unlocked_duelists:
-                self.options.start_inventory.value[d.name] = 1
+                self.options.start_inventory.value[d._name] = 1
 
         # Given the option, get a random set of starting dice
         if (self.options.randomize_starting_dice.value):
@@ -143,7 +165,6 @@ class YGODDMWorld(World):
 
     def create_regions(self) -> None:
         menu_region = Region("Menu", self.player, self.multiworld)
-        itempool: typing.List[YGODDMItem] = []
 
         if (self.options.progression.value == Progression.option_free_duel):
             # All duelists are accessible from Free Duel, so it is the only region
@@ -155,7 +176,7 @@ class YGODDMWorld(World):
             for duelist in self.duelist_unlock_order:
                 if duelist is not Duelist.YAMI_YUGI:
                     duelist_location: DuelistLocation = DuelistLocation(free_duel_region, self.player, duelist)
-                    set_rule(duelist_location, (lambda state, d=duelist_location, duelist_name = duelist.name: state.has(duelist_name, self.player)))
+                    set_rule(duelist_location, (lambda state, d=duelist_location, duelist_name = duelist._name: state.has(duelist_name, self.player)))
                     free_duel_region.locations.append(duelist_location)
 
             # If enabled, add Duelist 2nd locations
@@ -163,7 +184,7 @@ class YGODDMWorld(World):
                 for duelist in self.duelist_unlock_order:
                     if duelist is not Duelist.YAMI_YUGI:
                         duelist_2nd_location: Duelist2ndLocation = Duelist2ndLocation(free_duel_region, self.player, duelist)
-                        set_rule(duelist_2nd_location, (lambda state, d=duelist_2nd_location, duelist_name = duelist.name: state.has(duelist_name, self.player)))
+                        set_rule(duelist_2nd_location, (lambda state, d=duelist_2nd_location, duelist_name = duelist._name: state.has(duelist_name, self.player)))
                         free_duel_region.locations.append(duelist_2nd_location)
                 
             
@@ -171,18 +192,13 @@ class YGODDMWorld(World):
                 Constants.VICTORY_ITEM_NAME, self.player
             )
 
-            # Add Duelist unlock items
-            for duelist in self.duelist_unlock_order:
-                if duelist not in self.starting_unlocked_duelists and duelist is not Duelist.YAMI_YUGI:
-                    itempool.append(self.create_item(duelist.name))
-
             # Set Yami Yugi's item to game victory
             # Set rule so it knows that Yami Yugi can't appear until you have the right number of duelist items
             yami_yugi_location: DuelistLocation = DuelistLocation(free_duel_region, self.player, Duelist.YAMI_YUGI)
             duelist_names: typing.List[str] = []
             for d in self.duelist_unlock_order:
                 if d not in self.starting_unlocked_duelists and d is not Duelist.YAMI_YUGI:
-                    duelist_names.append(d.name)
+                    duelist_names.append(d._name)
 
             set_rule(yami_yugi_location, lambda state: state.has_from_list(duelist_names, self.player, max(self.options.free_duel_goal.value - self.options.starting_duelists, 0)))
             yami_yugi_location.place_locked_item(create_victory_event(self.player))
@@ -246,10 +262,6 @@ class YGODDMWorld(World):
                 Constants.VICTORY_ITEM_TOURNAMENT_NAME, self.player
             )
 
-            # Add Division 2 and 3 unlock items to pool
-            itempool.append(self.create_item(Constants.DIVISION_2_ITEM_NAME))
-            itempool.append(self.create_item(Constants.DIVISION_3_ITEM_NAME))
-
             # Set The Last Judgment's item to game victory
             the_last_judgment_location: TournamentLocation = TournamentLocation(division_3_region, self.player, name_to_tournament["The Last Judgment"])
             the_last_judgment_location.place_locked_item(create_victory_event_tournament(self.player))
@@ -283,35 +295,45 @@ class YGODDMWorld(World):
 
             self.multiworld.regions.append(grandpas_shop_region)
             menu_region.connect(grandpas_shop_region)
-            
+
+        self.multiworld.regions.append(menu_region)
+
+    def create_items(self) -> None:
+        itempool: typing.List[YGODDMItem] = []
+
+        if (self.options.progression.value == Progression.option_free_duel):
+            # Add Duelist unlock items
+            for duelist in self.duelist_unlock_order:
+                if duelist not in self.starting_unlocked_duelists and duelist is not Duelist.YAMI_YUGI:
+                    itempool.append(self.create_item(duelist._name))
+        else:
+            # Add Division 2 and 3 unlock items to pool
+            itempool.append(self.create_item(Constants.DIVISION_2_ITEM_NAME))
+            itempool.append(self.create_item(Constants.DIVISION_3_ITEM_NAME))
+
+        if (self.options.bonus_item_mode.value == BonusItemMode.option_shop_progress):
             # Create the 6 shop progression items
             for i in range(1,7):
                 itempool.append(self.create_item(Constants.SHOP_PROGRESSION_ITEM_NAME))
 
+            world_locations = self.multiworld.get_unfilled_locations(self.player)
+            filler_item_count = len(world_locations) - len(itempool)
+
             # Create filler gold checks
-            filler_slots: int
-            if (self.options.progression.value == Progression.option_free_duel):
-                filler_slots = (len(free_duel_region.locations) + len(grandpas_shop_region.locations)) - len(itempool)
-            else:
-                filler_slots = (len(division_1_region.locations) + len(division_2_region.locations) + len(division_3_region.locations) + len(grandpas_shop_region.locations)) - len(itempool)
-            itempool += [self.create_item(Constants.GOLD_FILLER_ITEM_NAME) for i in range(1, filler_slots)] # Less one (range start at 1) because of locked victory item
+            itempool += [self.create_item(Constants.GOLD_FILLER_ITEM_NAME) for i in range(0, filler_item_count)]
         else: #BonusItemMode Random Dice
+            world_locations = self.multiworld.get_unfilled_locations(self.player)
+            filler_item_count = len(world_locations) - len(itempool)
             # Add random Dice items from the pool to fill in empty locations
-            filler_slots: int
-            if (self.options.progression.value == Progression.option_free_duel):
-                filler_slots = len(free_duel_region.locations) - len(itempool)
-            else:
-                filler_slots = len(division_1_region.locations) + len(division_2_region.locations) + len(division_3_region.locations) - len(itempool)
             reward_dice: typing.List[Dice] = [dice for dice in all_dice]
-            while len(reward_dice) < filler_slots:
+            while len(reward_dice) < filler_item_count:
                 reward_dice += reward_dice
             self.random.shuffle(reward_dice)
 
-            itempool += [self.create_item(dice.name) for dice in reward_dice][:filler_slots - 1] # Less one becuase of locked victory item
-        
-        self.multiworld.itempool.extend(itempool)
+            itempool += [self.create_item(dice.name) for dice in reward_dice][:filler_item_count]
 
-        self.multiworld.regions.append(menu_region)
+        self.multiworld.itempool.extend(itempool)
+        
 
 
     def fill_slot_data(self) -> typing.Dict[str, typing.Any]:
