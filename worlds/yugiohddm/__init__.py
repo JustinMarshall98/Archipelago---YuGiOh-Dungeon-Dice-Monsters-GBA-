@@ -304,7 +304,7 @@ class YGODDMWorld(World):
         if (self.options.progression.value == Progression.option_free_duel):
             # Add Duelist unlock items
             for duelist in self.duelist_unlock_order:
-                if duelist is not Duelist.YAMI_YUGI:
+                if duelist not in self.starting_unlocked_duelists and duelist is not Duelist.YAMI_YUGI:
                     itempool.append(self.create_item(duelist._name))
         else:
             # Add Division 2 and 3 unlock items to pool
