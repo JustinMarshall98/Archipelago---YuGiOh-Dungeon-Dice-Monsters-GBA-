@@ -136,8 +136,7 @@ class YGODDMWorld(World):
         # Add all starting unlocked duelists to starting item pool, if you're on free duel progression
         if (self.options.progression.value == Progression.option_free_duel):
             for d in self.starting_unlocked_duelists:
-                self.options.start_inventory_from_pool.value[d._name] = 1
-                #self.push_precollected(self.create_item(d._name))
+                self.push_precollected(self.create_item(d._name))
 
 
     def create_item(self, name: str) -> YGODDMItem:
@@ -298,7 +297,6 @@ class YGODDMWorld(World):
             for dice_id in rando_dice_ids:
                 self.starting_randomized_dice.append(id_to_dice[dice_id])
                 # Put the Randomized dice into the start inventory
-                self.options.start_inventory.value[id_to_dice[dice_id].name] += 1
                 self.push_precollected(self.create_item(id_to_dice[dice_id].name))
 
         itempool: typing.List[YGODDMItem] = []
