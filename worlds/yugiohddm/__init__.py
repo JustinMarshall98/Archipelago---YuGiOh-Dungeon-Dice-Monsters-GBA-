@@ -20,6 +20,7 @@ from .dice import Dice, all_dice, id_to_dice, name_to_dice
 from .options import YGODDMOptions, FreeDuelRewards, Progression, BonusItemMode, RandomizeStartingDice
 from .duelists import Duelist, map_duelists_to_ids, ids_to_duelists, name_to_duelist
 from .tournament import Tournament, all_tournaments, name_to_tournament
+from .data import location_groups
 from .version import __version__
 
 class YGODDMSettings(settings.Group):
@@ -55,6 +56,8 @@ class YGODDMWorld(World):
     required_client_version = (0, 5, 0)
     web = YGODDMWeb()
     settings: typing.ClassVar[YGODDMSettings]
+
+    location_name_groups = location_groups
 
     duelist_unlock_order: typing.List[Duelist]
     starting_unlocked_duelists: typing.List[Duelist]
